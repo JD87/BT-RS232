@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="EOL_Characters">
+    <item>LF</item>
+    <item>CR</item>
+</string-array>
+</resources>
