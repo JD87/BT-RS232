@@ -26,6 +26,8 @@ import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
+import static java.lang.Thread.sleep;
+
 public class MainActivity extends AppCompatActivity {
 
     BluetoothSocket mBluetoothSocket;
@@ -253,9 +255,12 @@ public class MainActivity extends AppCompatActivity {
 
                     String data_to_send = message_to_send + "\n";
                     try {
+                        sleep(1000);
                         mOutputStream.write(data_to_send.getBytes());
                     } catch (IOException e) {
                         stopWorker = true;
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
