@@ -39,9 +39,11 @@ public class MainActivity extends AppCompatActivity {
     boolean stopWorker = false;
     boolean periodically = false;
 
+    String message_to_send = "SOUR:SENS:DATA?";
+
     TextView tv_temp;
     Switch mswitch;
-    Button mybutton;
+    Button mybutton, mybutton2;
     CheckBox mcheckbox;
 
     @Override
@@ -52,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         tv_temp = (TextView) findViewById(R.id.editText);
         mswitch = (Switch) findViewById(R.id.switch1);
         mybutton = (Button) findViewById(R.id.button);
+        mybutton2 = (Button) findViewById(R.id.button2);
         mcheckbox = (CheckBox) findViewById(R.id.checkBox);
 
         find_BTDevice();
@@ -92,12 +95,31 @@ public class MainActivity extends AppCompatActivity {
                     }
                 else
                     try {
-                        sendData();
+                        sendData(message_to_send);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
             }
         });
+
+        mybutton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+                String cmd_to_send = pref.getString("text_to_send","*IDN?");
+
+                if(periodically)
+                    toastMessage("Disenable Periodically");
+                else
+                    try {
+                        sendData(cmd_to_send);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+            }
+        });
+
     }
 
     @Override
@@ -248,8 +270,6 @@ public class MainActivity extends AppCompatActivity {
         final Thread workerThread = new Thread(new Runnable(){
             public void run(){
                 mBluetoothAdapter.cancelDiscovery();
-                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-                String message_to_send = pref.getString("text_to_send","*IDN?");
 
                 while(!Thread.currentThread().isInterrupted() && !stopWorker && periodically){
 
@@ -274,10 +294,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void sendData() throws IOException
+    void sendData(String message_to_send) throws IOException
     {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        String message_to_send = pref.getString("text_to_send","*IDN?");
         message_to_send= message_to_send + "\n";
         mOutputStream.write(message_to_send.getBytes());
         toastMessage("Data Sent");
