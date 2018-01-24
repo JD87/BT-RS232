@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -32,12 +33,14 @@
             android:entries="@array/EOL_Characters"
             android:entryValues="@array/EOL_Characters"/>
         <EditTextPreference
-            android:defaultValue="0.5"
-            android:inputType="numberDecimal"
-            android:key="period_length"
+            android:defaultValue="1000"
+            android:inputType="number"
+            android:key="period_length_mills"
+            android:digits="0123456789"
+            android:numeric="integer"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="Period length" />
+            android:title="Period length  (milliseconds)" />
 
     </PreferenceCategory>
 
