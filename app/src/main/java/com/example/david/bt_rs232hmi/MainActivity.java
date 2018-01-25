@@ -1,14 +1,22 @@
 package com.example.david.bt_rs232hmi;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.media.RingtoneManager;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -266,6 +274,9 @@ public class MainActivity extends AppCompatActivity {
 
     void sprechen() throws  IOException
     {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        final String sleep_mils = pref.getString("period_length_mills","1000");
+        final long millis = Long.parseLong(String.valueOf(sleep_mils));
 
         final Thread workerThread = new Thread(new Runnable(){
             public void run(){
@@ -275,7 +286,8 @@ public class MainActivity extends AppCompatActivity {
 
                     String data_to_send = message_to_send + "\n";
                     try {
-                        sleep(1000);
+                        Log.d("Heyyyy O", String.valueOf(sleep_mils));
+                        sleep(millis);
                         mOutputStream.write(data_to_send.getBytes());
                     } catch (IOException e) {
                         stopWorker = true;
@@ -299,6 +311,41 @@ public class MainActivity extends AppCompatActivity {
         message_to_send= message_to_send + "\n";
         mOutputStream.write(message_to_send.getBytes());
         toastMessage("Data Sent");
+    }
+
+    public void notification(){
+        NotificationCompat.Builder Notificationbuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.mipmap.ic_launcher_di)
+                        .setContentTitle("Notify temperature reached")
+                        .setContentText("seems we are near or in the temp. you wanted.")
+                        .setOnlyAlertOnce(true)
+                        .setAutoCancel(true)
+                        .setVibrate(new long[] {1000,1000,1000})
+                        .setLights(Color.RED, 300, 300)
+                        .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+
+        // Creates an explicit intent for an Activity in your app
+        Intent result_notifIntent = new Intent(this,MainActivity.class);
+
+        // The stack builder object will contain an artificial back stack for the
+        // started Activity.
+        // This ensures that navigating backward from the Activity leads out of
+        // your application to the Home screen.
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+
+        // Adds the back stack for the Intent (but not the Intent itself)
+        stackBuilder.addParentStack(MainActivity.class);
+
+        // Adds the Intent that starts the Activity to the top of the stack
+        stackBuilder.addNextIntent(result_notifIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent
+                (0,PendingIntent.FLAG_UPDATE_CURRENT);
+        Notificationbuilder.setContentIntent(resultPendingIntent);
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        // mId allows you to update the notification later on.
+        mNotificationManager.notify("notif tag",1,Notificationbuilder.build());
     }
 
 

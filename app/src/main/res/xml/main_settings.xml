@@ -10,9 +10,17 @@
 
         <CheckBoxPreference
             android:key="pref_notification"
-            android:summary="Do you want to be notified?"
             android:title="Notification"
-            android:defaultValue="true" />
+            android:defaultValue="false" />
+        <EditTextPreference
+            android:defaultValue="30"
+            android:digits="0123456789"
+            android:inputType="number"
+            android:numeric="integer"
+            android:key="temp_to_notify"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Temperature to notify" />
 
     </PreferenceCategory>
 
