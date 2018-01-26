@@ -13,10 +13,8 @@
             android:title="Notification"
             android:defaultValue="false" />
         <EditTextPreference
-            android:defaultValue="30"
+            android:defaultValue="25"
             android:digits="0123456789"
-            android:inputType="number"
-            android:numeric="integer"
             android:key="temp_to_notify"
             android:selectAllOnFocus="true"
             android:singleLine="true"

@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
     String message_to_send = "SOUR:SENS:DATA?";
 
+    String notify_temp;
+
     TextView tv_temp;
     Switch mswitch;
     Button mybutton, mybutton2;
@@ -64,6 +66,11 @@ public class MainActivity extends AppCompatActivity {
         mybutton = (Button) findViewById(R.id.button);
         mybutton2 = (Button) findViewById(R.id.button2);
         mcheckbox = (CheckBox) findViewById(R.id.checkBox);
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        notify_temp = pref.getString("temp_to_notify", "25");
+
+
 
         find_BTDevice();
 
@@ -124,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
             }
         });
 
@@ -239,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
                             for(int i=0;i<bytesAvailable;i++)
                             {
                                 byte b = packetBytes[i];
-                                if(b == delimiter_lf)       //delimiter
+                                if(b == delimiter_cr)       //delimiter
                                 {
                                     byte[] encodedBytes = new byte[readBufferPosition[0]];
                                     System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
@@ -251,6 +257,8 @@ public class MainActivity extends AppCompatActivity {
                                         public void run()
                                         {
                                             tv_temp.setText(data);
+                                            if (notify_temp.equals(data))
+                                                notification();
                                         }
                                     });
                                 }
@@ -316,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
     public void notification(){
         NotificationCompat.Builder Notificationbuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher_di)
+                        .setSmallIcon(R.mipmap.di_icon)
                         .setContentTitle("Notify temperature reached")
                         .setContentText("seems we are near or in the temp. you wanted.")
                         .setOnlyAlertOnce(true)
