@@ -4,4 +4,8 @@
     <item>LF</item>
     <item>CR</item>
 </string-array>
+    <string-array name="EOL_Characters_val">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
 </resources>

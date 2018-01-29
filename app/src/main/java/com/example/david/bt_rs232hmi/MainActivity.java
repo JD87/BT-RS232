@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     String message_to_send = "SOUR:SENS:DATA?";
 
     String notify_temp;
+    boolean notify_bool = false;
+    byte delimiter;
 
     TextView tv_temp;
     Switch mswitch;
@@ -68,9 +70,8 @@ public class MainActivity extends AppCompatActivity {
         mcheckbox = (CheckBox) findViewById(R.id.checkBox);
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        notify_temp = pref.getString("temp_to_notify", "25");
 
-
+        notify_bool = pref.getBoolean("pref_notification", false);
 
         find_BTDevice();
 
@@ -178,12 +179,15 @@ public class MainActivity extends AppCompatActivity {
                     mBluetoothDevice = device;
                     toastMessage(device.getName() + " " + device.getAddress() + " found");
 
+                    /*
                     // 12 bonded, 11bonding, 10 not bonded
+
                     while(mBluetoothDevice.getBondState() != 12){
                         // wait
                     }
                     if(mBluetoothDevice.getBondState() == 12)
                         toastMessage(device.getName() + " bonded (" + mBluetoothDevice.getBondState() + ")" );
+                        */
                     try {
                         openBT(device);
                     } catch (IOException e) {
@@ -218,9 +222,9 @@ public class MainActivity extends AppCompatActivity {
         toastMessage("Bluetooth Closed");
     }
 
-    void zuhoren(){
-        final byte delimiter_lf = 10;      // LF character according to ASCII code, sort of like CR or \n... I think
-        final byte delimiter_cr = 13;      // CR character according to ASCII code, for raspi
+    void zuhoren() throws IOException {
+        //final byte delimiter_lf = 10;      // LF character according to ASCII code, sort of like CR or \n... I think
+        //byte delimiter_cr = 13;      // CR character according to ASCII code, for raspi
         final Handler mhandler = new Handler();
 
         stopWorker = false;
@@ -245,7 +249,10 @@ public class MainActivity extends AppCompatActivity {
                             for(int i=0;i<bytesAvailable;i++)
                             {
                                 byte b = packetBytes[i];
-                                if(b == delimiter_cr)       //delimiter
+
+                                check_for_eol_preg();
+
+                                if(b == delimiter)       //delimiter
                                 {
                                     byte[] encodedBytes = new byte[readBufferPosition[0]];
                                     System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
@@ -257,10 +264,11 @@ public class MainActivity extends AppCompatActivity {
                                         public void run()
                                         {
                                             tv_temp.setText(data);
-                                            if (notify_temp.equals(data))
-                                                notification();
                                         }
                                     });
+
+                                    if(notify_bool)
+                                        check_for_notification(data);
                                 }
                                 else
                                 {
@@ -275,8 +283,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-        });
 
+        });
+        //mInputStream.reset();
         workerThread.start();
     }
 
@@ -294,7 +303,6 @@ public class MainActivity extends AppCompatActivity {
 
                     String data_to_send = message_to_send + "\n";
                     try {
-                        Log.d("Heyyyy O", String.valueOf(sleep_mils));
                         sleep(millis);
                         mOutputStream.write(data_to_send.getBytes());
                     } catch (IOException e) {
@@ -356,6 +364,35 @@ public class MainActivity extends AppCompatActivity {
         mNotificationManager.notify("notif tag",1,Notificationbuilder.build());
     }
 
+    public void check_for_notification(String data){
+        //PROBLEM NOTIFICATION CHECK BOX DOES NOT WORK PROPERLY, SEND TEXT WHIT AND WITHOUT CHECKING IT
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        notify_temp = pref.getString("temp_to_notify", "25");
+
+        final float fl_data = Float.parseFloat(data);
+        final float fl_notif_temp = Float.parseFloat(notify_temp);
+
+        if ((fl_data < (fl_notif_temp + 0.1)) && (fl_data > (fl_notif_temp - 0.1)))
+            notification();
+
+    }
+
+    public void check_for_eol_preg(){
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        String str_delimiter = pref.getString("eol_pref","LF");
+
+        Log.d("taaag", str_delimiter);
+
+        if(str_delimiter.equals("LF"))
+            delimiter = 10;
+        else
+            delimiter = 13;
+    }
+
+    public int getInt(String s){
+        return Integer.parseInt(s.replaceAll("[\\D]", ""));
+    }
 
     // To make simpler the toasting
     private void toastMessage(String message){
