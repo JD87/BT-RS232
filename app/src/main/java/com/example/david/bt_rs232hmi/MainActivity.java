@@ -178,16 +178,7 @@ public class MainActivity extends AppCompatActivity {
                 {
                     mBluetoothDevice = device;
                     toastMessage(device.getName() + " " + device.getAddress() + " found");
-
-                    /*
-                    // 12 bonded, 11bonding, 10 not bonded
-
-                    while(mBluetoothDevice.getBondState() != 12){
-                        // wait
-                    }
-                    if(mBluetoothDevice.getBondState() == 12)
-                        toastMessage(device.getName() + " bonded (" + mBluetoothDevice.getBondState() + ")" );
-                        */
+                    
                     try {
                         openBT(device);
                     } catch (IOException e) {
