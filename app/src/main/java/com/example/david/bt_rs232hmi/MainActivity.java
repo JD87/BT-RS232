@@ -24,6 +24,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     boolean notify_bool = false;
     byte delimiter;
 
-    TextView tv_temp;
+    EditText tv_temp;
     Switch mswitch;
     Button mybutton, mybutton2;
     CheckBox mcheckbox;
@@ -63,17 +64,39 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tv_temp = (TextView) findViewById(R.id.editText);
+        tv_temp = (EditText) findViewById(R.id.editText);
         mswitch = (Switch) findViewById(R.id.switch1);
-        mybutton = (Button) findViewById(R.id.button);
         mybutton2 = (Button) findViewById(R.id.button2);
-        mcheckbox = (CheckBox) findViewById(R.id.checkBox);
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 
         notify_bool = pref.getBoolean("pref_notification", false);
 
-        find_BTDevice();
+        tv_temp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                periodically = false;
+                try {
+                    sendData(message_to_send);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        tv_temp.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                periodically = true;
+                if(periodically)
+                try {
+                    sprechen();
+                } catch (IOException e){
+                    e.printStackTrace();
+                }
+                return true;
+            }
+        });
 
         mswitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -87,34 +110,6 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-            }
-        });
-
-        mcheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    periodically = true;
-                else
-                    periodically = false;
-            }
-        });
-
-        mybutton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (periodically)
-                    try {
-                        sprechen();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                else
-                    try {
-                        sendData(message_to_send);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
             }
         });
 

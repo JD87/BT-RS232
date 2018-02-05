@@ -15,11 +15,12 @@ tools:context="com.example.david.bt_rs232hmi.MainActivity"
     android:text="Prepare Bluetooth "
     tools:checked="false"
     tools:layout_constraintBottom_creator="1"
-    app:layout_constraintBottom_toTopOf="@+id/button"
-    android:layout_marginStart="24dp"
     tools:layout_constraintLeft_creator="1"
-    android:layout_marginBottom="30dp"
-    app:layout_constraintLeft_toLeftOf="@+id/button" />
+    tools:layout_constraintRight_creator="1"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintRight_toRightOf="parent"
+    android:layout_marginBottom="205dp"
+    app:layout_constraintLeft_toLeftOf="parent" />
 
     <EditText
         android:id="@+id/editText"
@@ -53,28 +54,6 @@ tools:context="com.example.david.bt_rs232hmi.MainActivity"
     android:orientation="horizontal"
     tools:layout_editor_absoluteY="20dp"
     tools:layout_editor_absoluteX="0dp" />
-
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="55dp"
-        android:text="Get Temp"
-        tools:layout_constraintRight_creator="1"
-        app:layout_constraintRight_toRightOf="@+id/button2"
-        app:layout_constraintBaseline_toBaselineOf="@+id/checkBox"
-        tools:layout_constraintBaseline_creator="1" />
-
-    <CheckBox
-        android:id="@+id/checkBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Periodically"
-        tools:layout_constraintBottom_creator="1"
-        app:layout_constraintBottom_toTopOf="@+id/button2"
-        tools:layout_constraintLeft_creator="1"
-        android:layout_marginBottom="40dp"
-        app:layout_constraintLeft_toRightOf="@+id/button" />
 
     <TextView
         android:id="@+id/textView"
