@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
                 {
                     mBluetoothDevice = device;
                     toastMessage(device.getName() + " " + device.getAddress() + " found");
-                    
+
                     try {
                         openBT(device);
                     } catch (IOException e) {
@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
     void openBT(BluetoothDevice device) throws IOException
     {
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
-        mBluetoothSocket = mBluetoothDevice.createRfcommSocketToServiceRecord(uuid);
+        mBluetoothSocket = device.createRfcommSocketToServiceRecord(uuid);
         mBluetoothSocket.connect();
         mOutputStream = mBluetoothSocket.getOutputStream();
         mInputStream = mBluetoothSocket.getInputStream();
@@ -214,8 +214,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void zuhoren() throws IOException {
-        //final byte delimiter_lf = 10;      // LF character according to ASCII code, sort of like CR or \n... I think
-        //byte delimiter_cr = 13;      // CR character according to ASCII code, for raspi
+        final byte delimiter_lf = 10;      // LF character according to ASCII code, sort of like CR or \n... I think
+        final byte delimiter_cr = 13;      // CR character according to ASCII code, for raspi
         final Handler mhandler = new Handler();
 
         stopWorker = false;
@@ -241,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                             {
                                 byte b = packetBytes[i];
 
-                                check_for_eol_preg();
+                                check_for_eol_pref();
 
                                 if(b == delimiter)       //delimiter
                                 {
@@ -263,7 +263,13 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 else
                                 {
-                                    readBuffer[readBufferPosition[0]++] = b;
+                                    if (b == delimiter_lf || b == delimiter_cr){
+                                        //  ¯\_(ツ)_/¯
+                                        //toastMessage("wrong delimiter");
+                                        readBufferPosition[0] = 0;
+                                    }
+                                    else
+                                        readBuffer[readBufferPosition[0]++] = b;
                                 }
                             }
                         }
@@ -369,11 +375,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void check_for_eol_preg(){
+    public void check_for_eol_pref(){
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         String str_delimiter = pref.getString("eol_pref","LF");
 
         Log.d("taaag", str_delimiter);
+
+
 
         if(str_delimiter.equals("LF"))
             delimiter = 10;
