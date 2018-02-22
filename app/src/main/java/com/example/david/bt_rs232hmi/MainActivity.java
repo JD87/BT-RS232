@@ -17,6 +17,7 @@ import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -26,6 +27,8 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     boolean stopWorker = false;
     boolean periodically = false;
+    boolean stpt_bool = false;
 
     String message_to_send = "SOUR:SENS:DATA?";
 
@@ -56,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
 
     EditText tv_temp;
     Switch mswitch;
-    Button mybutton, mybutton2;
-    CheckBox mcheckbox;
+    Button mybutton2;
+    TableLayout stpt_table;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         tv_temp = (EditText) findViewById(R.id.editText);
         mswitch = (Switch) findViewById(R.id.switch1);
         mybutton2 = (Button) findViewById(R.id.button2);
+        stpt_table = (TableLayout) findViewById(R.id.table);
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 
@@ -130,6 +135,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        stpt_table.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                stpt_bool = true;
+                get_stpoints();
+            }
+        });
     }
 
     @Override
@@ -186,8 +198,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    void openBT(BluetoothDevice device) throws IOException
-    {
+    void openBT(BluetoothDevice device) throws IOException {
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
         mBluetoothSocket = device.createRfcommSocketToServiceRecord(uuid);
         mBluetoothSocket.connect();
@@ -199,8 +210,7 @@ public class MainActivity extends AppCompatActivity {
         toastMessage("Bluetooth Opened");
     }
 
-    void closeBT() throws IOException
-    {
+    void closeBT() throws IOException {
         stopWorker = true;
         mOutputStream.close();
         mInputStream.close();
@@ -245,10 +255,12 @@ public class MainActivity extends AppCompatActivity {
                                     final String data = new String(encodedBytes, "US-ASCII");
                                     readBufferPosition[0] = 0;
 
+
                                     mhandler.post(new Runnable()
                                     {
                                         public void run()
                                         {
+
                                             tv_temp.setText(data);
                                         }
                                     });
@@ -281,8 +293,7 @@ public class MainActivity extends AppCompatActivity {
         workerThread.start();
     }
 
-    void sprechen() throws  IOException
-    {
+    void sprechen() throws  IOException {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         final String sleep_mils = pref.getString("period_length_mills","1000");
         final long millis = Long.parseLong(String.valueOf(sleep_mils));
@@ -314,11 +325,65 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    void sendData(String message_to_send) throws IOException
-    {
+    void sendData(String message_to_send) throws IOException {
         message_to_send= message_to_send + "\n";
         mOutputStream.write(message_to_send.getBytes());
-        toastMessage("Data Sent");
+        //toastMessage("Data Sent");
+    }
+
+    void get_stpoints(){
+        final String st_points [] = {"","","","","","","",""};
+        final Handler mhandler = new Handler();
+
+        final Thread workerThread = new Thread(new Runnable(){
+
+            public void run(){
+                mBluetoothAdapter.cancelDiscovery();
+
+                while(!Thread.currentThread().isInterrupted() && !stopWorker && stpt_bool){
+                    for (int i=0;i<8;i++){
+                        String data_to_send = "SOUR:LIST:SPO" + i + "?" + "\n";
+                        try {
+                            mOutputStream.write(data_to_send.getBytes());
+                            try {
+                                sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            Log.d("stp","SOUR:LIST:SPO" + i + "?");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        st_points[i] = String.valueOf(tv_temp.getText());
+                        Log.d("st_points",st_points[i]);
+                    }
+                    stpt_bool = false;
+
+                    mhandler.post(new Runnable()
+                    {
+                        public void run()
+                        {
+                            TableLayout table = (TableLayout) findViewById(R.id.table);
+
+                            TableRow row_title = (TableRow)LayoutInflater.from(getBaseContext()).inflate(R.layout.row_attrib, null);
+
+                            ((TextView)row_title.findViewById(R.id.stpoint_label)).setText("Set Points");
+                            table.addView(row_title);
+
+                            for (int i=0;i<8;i++){
+
+                                TableRow row = (TableRow)LayoutInflater.from(getBaseContext()).inflate(R.layout.row_attrib, null);
+
+                                ((TextView)row.findViewById(R.id.stpoint_label)).setText(st_points[i]);
+                                table.addView(row);
+                            }
+                        }
+                    });
+
+                }
+            }
+        });
+        workerThread.start();
     }
 
     public void notification(){
@@ -374,10 +439,6 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
         String str_delimiter = pref.getString("eol_pref","LF");
 
-        Log.d("taaag", str_delimiter);
-
-
-
         if(str_delimiter.equals("LF"))
             delimiter = 10;
         else
@@ -392,4 +453,4 @@ public class MainActivity extends AppCompatActivity {
     private void toastMessage(String message){
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
-} //change
+}
