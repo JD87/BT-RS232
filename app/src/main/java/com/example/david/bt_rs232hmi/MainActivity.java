@@ -23,7 +23,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -73,10 +72,6 @@ public class MainActivity extends AppCompatActivity {
         mybutton2 = (Button) findViewById(R.id.button2);
         stpt_table = (TableLayout) findViewById(R.id.table);
 
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-
-        notify_bool = pref.getBoolean("pref_notification", false);
-
         tv_temp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
                 String cmd_to_send = pref.getString("text_to_send","*IDN?");
 
                 if(periodically)
-                    toastMessage("Disenable Periodically");
+                    toastMessage("Disable Periodically");
                 else
                     try {
                         sendData(cmd_to_send);
@@ -265,8 +260,7 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                     });
 
-                                    if(notify_bool)
-                                        check_for_notification(data);
+                                    check_for_notification(data);
                                 }
                                 else
                                 {
@@ -328,10 +322,10 @@ public class MainActivity extends AppCompatActivity {
     void sendData(String message_to_send) throws IOException {
         message_to_send= message_to_send + "\n";
         mOutputStream.write(message_to_send.getBytes());
-        //toastMessage("Data Sent");
     }
 
     void get_stpoints(){
+        stpt_table.removeAllViews();
         final String st_points [] = {"","","","","","","",""};
         final Handler mhandler = new Handler();
 
@@ -341,8 +335,10 @@ public class MainActivity extends AppCompatActivity {
                 mBluetoothAdapter.cancelDiscovery();
 
                 while(!Thread.currentThread().isInterrupted() && !stopWorker && stpt_bool){
+                    int n = 0;
                     for (int i=0;i<8;i++){
-                        String data_to_send = "SOUR:LIST:SPO" + i + "?" + "\n";
+                        n = i + 1;
+                        String data_to_send = "SOUR:LIST:SPO" + n + "?" + "\n";
                         try {
                             mOutputStream.write(data_to_send.getBytes());
                             try {
@@ -350,7 +346,7 @@ public class MainActivity extends AppCompatActivity {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            Log.d("stp","SOUR:LIST:SPO" + i + "?");
+                            Log.d("stp","SOUR:LIST:SPO" + n + "?");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -363,19 +359,19 @@ public class MainActivity extends AppCompatActivity {
                     {
                         public void run()
                         {
-                            TableLayout table = (TableLayout) findViewById(R.id.table);
+                            //TableLayout table = (TableLayout) findViewById(R.id.table);
 
                             TableRow row_title = (TableRow)LayoutInflater.from(getBaseContext()).inflate(R.layout.row_attrib, null);
 
                             ((TextView)row_title.findViewById(R.id.stpoint_label)).setText("Set Points");
-                            table.addView(row_title);
+                            stpt_table.addView(row_title);
 
                             for (int i=0;i<8;i++){
 
                                 TableRow row = (TableRow)LayoutInflater.from(getBaseContext()).inflate(R.layout.row_attrib, null);
 
                                 ((TextView)row.findViewById(R.id.stpoint_label)).setText(st_points[i]);
-                                table.addView(row);
+                                stpt_table.addView(row);
                             }
                         }
                     });
@@ -422,17 +418,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void check_for_notification(String data){
-        //PROBLEM NOTIFICATION CHECK BOX DOES NOT WORK PROPERLY, SEND TEXT WHIT AND WITHOUT CHECKING IT
-
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-        notify_temp = pref.getString("temp_to_notify", "25");
 
-        final float fl_data = Float.parseFloat(data);
-        final float fl_notif_temp = Float.parseFloat(notify_temp);
+        notify_bool = pref.getBoolean("pref_notification", false);
 
-        if ((fl_data < (fl_notif_temp + 0.1)) && (fl_data > (fl_notif_temp - 0.1)))
-            notification();
+        if(notify_bool){
+            notify_temp = pref.getString("temp_to_notify", "25");
 
+            final float fl_data = Float.parseFloat(data);
+            final float fl_notif_temp = Float.parseFloat(notify_temp);
+
+            if ((fl_data < (fl_notif_temp + 0.1)) && (fl_data > (fl_notif_temp - 0.1)))
+                notification();
+        }
     }
 
     public void check_for_eol_pref(){
