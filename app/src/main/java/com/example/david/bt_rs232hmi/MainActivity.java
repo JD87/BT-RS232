@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     boolean stpt_bool = false;
 
     String message_to_send = "SOUR:SENS:DATA?";
+    String global_data = "";
 
     String notify_temp;
     boolean notify_bool = false;
@@ -255,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
                                     {
                                         public void run()
                                         {
-
+                                            global_data = data;
                                             tv_temp.setText(data);
                                         }
                                     });
@@ -350,7 +351,7 @@ public class MainActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        st_points[i] = String.valueOf(tv_temp.getText());
+                        st_points[i] = global_data;
                         Log.d("st_points",st_points[i]);
                     }
                     stpt_bool = false;
@@ -387,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.di_icon)
                         .setContentTitle("Notify temperature reached")
-                        .setContentText("seems we are near or in the temp. you wanted.")
+                        .setContentText("seems we are in " + global_data + "°C")
                         .setOnlyAlertOnce(true)
                         .setAutoCancel(true)
                         .setVibrate(new long[] {1000,1000,1000})
@@ -408,8 +409,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Adds the Intent that starts the Activity to the top of the stack
         stackBuilder.addNextIntent(result_notifIntent);
-        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent
-                (0,PendingIntent.FLAG_UPDATE_CURRENT);
+        //PendingIntent resultPendingIntent = stackBuilder.getPendingIntent
+                //(0,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        //Somehow this makes the notification work, in the sens that returns to the main activity untouched, finally :)
+        result_notifIntent.setAction(Intent.ACTION_MAIN);
+        result_notifIntent.setAction(Intent.CATEGORY_LAUNCHER);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
+                result_notifIntent, 0);
+
         Notificationbuilder.setContentIntent(resultPendingIntent);
         NotificationManager mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
